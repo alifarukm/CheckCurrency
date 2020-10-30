@@ -7,11 +7,11 @@ beforeAll(function () {
 })
 
 describe('-- conversion test --', function() {
-  test('left to right', () => {
-    expect(converter.convert('? TRY = 2.5 USD')).toBe('20.81 TRY = 2.50 USD');
+  test('left to right', async () => {
+    expect(await converter.convert('1 USD = ? TRY')).toBe('1.00 USD = 2 TRY');
   });
 
-  test('right to left', () => {
-    expect(converter.convert('? USD = 1 TRY')).toBe('0.12 USD = 1.00 TRY');
+  test('right to left', async () => {
+    expect(await converter.convert('? USD = 1 TRY')).toBe('2 USD = 1.00 TRY');
   });
 })
