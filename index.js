@@ -8,9 +8,11 @@ var rl = readline.createInterface({
   terminal: false,
 });
 
-rl.on("line", function (line) {
-  let val = converter.convert(line);
+rl.on("line", async (line) => {
+  let val = await converter.convert(line);
+  console.log(val);
 });
+
 /**
  * 1. get string from stdin
  * 2. get exchange rate

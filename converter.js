@@ -1,4 +1,6 @@
-const https = require("https");
+const Utils = require("./utils");
+var utils = Utils();
+const http = require("http");
 
 /**
  * Currency Converter
@@ -12,28 +14,15 @@ function Converter() {
   /**
    * Calculate
    */
-  this.calculate = function () {
-    const options = {
-      hostname: "api.exchangeratesapi.io",
-      port: 8080,
-      path: `/${this._from}?base=${this._base}&symbols=${this._symbols}`,
-      method: "GET",
-    };
-    console.log(`/${this._from}?base=${this._base}&symbols=${this._symbols}`);
-    const req = https.request(options, (res) => {
-      console.log(`statusCode: ${res.statusCode}`);
-
-      res.on("data", (d) => {
-        process.stdout.write(d);
+  this.calculate = async function () {
+    let data = await utils
+      .makeRequest(this._from, this._base, this._symbols)
+      .then((data) => {
+        return data;
       });
-    });
-
-    req.on("error", (error) => {
-      console.error(error.message);
-    });
-
-    req.end();
-    return 0;
+    // process.stdout.write(JSON.stringify(typeof data.rates[this._symbols]));
+    
+    return (this._to * data.rates[this._symbols]).toFixed(2);
   };
 
   /**
@@ -41,32 +30,37 @@ function Converter() {
    *
    * @param {string} str
    */
-  this.convert = function (str = "") {
-    const left = str.split("=")[0];
-    const right = str.split("=")[1];
+  this.convert = async (str = "") => {
+    try{
+      utils.validateString(str);
 
-    if (left.includes("?")) {
-      this._symbols = left.replace(/[^a-zA-Z]+/g, "");
-      this._base = right.replace(/[^a-zA-Z]+/g, "");
-      this._to = right.replace(/[^0-9\.,]/g, "");
-    } else {
-      this._symbols = right.replace(/[^a-zA-Z]+/g, "");
-      this._base = left.replace(/[^a-zA-Z]+/g, "");
-      this._to = left.replace(/[^0-9\.,]/g, "");
+      const left = str.split("=")[0];
+      const right = str.split("=")[1];
+    
+      if (left.includes("?")) {
+        this._symbols = left.replace(/[^a-zA-Z]+/g, "");
+        this._base = right.replace(/[^a-zA-Z]+/g, "");
+        this._to = parseFloat(right.replace(/[^0-9\.,]/g, "")).toFixed(2);
+      } else {
+        this._symbols = right.replace(/[^a-zA-Z]+/g, "");
+        this._base = left.replace(/[^a-zA-Z]+/g, "");
+        this._to = parseFloat(left.replace(/[^0-9\.,]/g, "")).toFixed(2);
+      }
+      
+      this._symbols = this._symbols.toUpperCase();
+      this._base = this._base.toUpperCase();
+      
+      utils.validateCurrency(this._symbols);
+      utils.validateCurrency(this._base);
+    }catch(err){
+      return err.message
     }
+    var price = await calculate();
 
-    var price = calculate();
-
-    return str.replace("?", price);
+    return `${price} ${this._symbols} = ${this._to} ${this._base}`;
   };
 
   return this;
 }
-
-// function _validateCurrency(currency) {
-//     if (!(currency in currencies)) {
-//         throw new ExchangeRatesError(`${currency} is not a valid currency`);
-//     }
-// }
 
 module.exports = Converter;
